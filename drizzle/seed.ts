@@ -299,17 +299,34 @@ async function main() {
   const url = getDatabaseUrl();
   const client = new pg.Client({ connectionString: url });
   await client.connect();
+
+  const runSample = process.env.SEED_SAMPLE_DATA === "1";
+  const runRefSql = process.env.SEED_IMPORT_REF_SQL === "1";
+
   console.log("Seeding…");
+  console.log(
+    "  Selalu: payment_channels, payment_instructions, notification_templates, settings",
+  );
+  console.log(
+    runSample
+      ? "  SEED_SAMPLE_DATA=1 → events, ticket_types, customers, orders, order_items, order_item_attendees, tickets (sample)"
+      : "  Sample chain BELUM dijalankan. Set SEED_SAMPLE_DATA=1 di .env.local atau: npm run seed:full",
+  );
+  console.log(
+    runRefSql
+      ? "  SEED_IMPORT_REF_SQL=1 → menjalankan refs/seed.sql"
+      : "  refs/seed.sql tidak dijalankan (set SEED_IMPORT_REF_SQL=1 jika perlu).",
+  );
 
   try {
     await client.query("BEGIN");
     await seedCore(client);
 
-    if (process.env.SEED_SAMPLE_DATA === "1") {
+    if (runSample) {
       await seedSample(client);
     }
 
-    if (process.env.SEED_IMPORT_REF_SQL === "1") {
+    if (runRefSql) {
       await runRefSeedSql(client);
     }
 

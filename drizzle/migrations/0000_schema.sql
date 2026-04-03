@@ -7,6 +7,29 @@
 -- Generation Time: 2026-04-03 16:04:01.3540
 -- -------------------------------------------------------------
 
+-- Dipakai oleh DEFAULT pada kolom tickets.ticket_code; harus ada sebelum CREATE TABLE tickets.
+CREATE OR REPLACE FUNCTION public.generate_random_string(length integer)
+ RETURNS text
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+    chars text[] := '{0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z}';
+    result text := '';
+    i integer := 0;
+BEGIN
+    IF length < 1 THEN
+        RAISE EXCEPTION 'Given length cannot be less than 1';
+    END IF;
+
+    FOR i IN 1..length LOOP
+        result := result || chars[1+random()*(array_length(chars, 1)-1)];
+    END LOOP;
+
+    RETURN result;
+END;
+$function$
+
+--> statement-breakpoint
 
 DROP TABLE IF EXISTS "public"."orders";
 --> statement-breakpoint
