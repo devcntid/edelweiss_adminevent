@@ -12,6 +12,7 @@ import {
   Upload,
   Palette,
   Settings as SettingsIcon,
+  Globe,
 } from "lucide-react";
 import Image from "next/image";
 import { Setting, SETTING_KEYS, DEFAULT_SETTINGS } from "@/types/settings";
@@ -93,6 +94,13 @@ export default function SettingsPage() {
         if (key.includes("sidebar_")) {
           window.dispatchEvent(new CustomEvent("sidebarRefresh"));
         }
+        if (
+          key === SETTING_KEYS.LOGO_PUBLIC_APP ||
+          key === SETTING_KEYS.FAVICON_PUBLIC_APP ||
+          key === SETTING_KEYS.TITLE_PUBLIC_APP
+        ) {
+          window.dispatchEvent(new CustomEvent("publicAppMetadataUpdated"));
+        }
 
         console.log("📡 Settings update events dispatched for:", key);
       }, 100);
@@ -144,6 +152,12 @@ export default function SettingsPage() {
           settingKey === SETTING_KEYS.APP_LOGIN_BACKGROUND
         ) {
           window.dispatchEvent(new CustomEvent("metadataUpdated"));
+        }
+        if (
+          settingKey === SETTING_KEYS.LOGO_PUBLIC_APP ||
+          settingKey === SETTING_KEYS.FAVICON_PUBLIC_APP
+        ) {
+          window.dispatchEvent(new CustomEvent("publicAppMetadataUpdated"));
         }
 
         console.log("📡 File upload events dispatched for:", settingKey);
@@ -200,7 +214,11 @@ export default function SettingsPage() {
                 ? "Pratinjau favicon:"
                 : setting.key === SETTING_KEYS.APP_LOGIN_BACKGROUND
                   ? "Pratinjau background halaman login:"
-                  : "Pratinjau:"}
+                  : setting.key === SETTING_KEYS.LOGO_PUBLIC_APP
+                    ? "Pratinjau logo publik:"
+                    : setting.key === SETTING_KEYS.FAVICON_PUBLIC_APP
+                      ? "Pratinjau favicon publik:"
+                      : "Pratinjau:"}
           </Label>
           <div className="mt-2 p-4 border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center bg-gray-50">
             <img
@@ -454,6 +472,34 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
+        {/* Public app metadata (situs / app pengunjung) */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5" />
+              Metadata aplikasi publik
+            </CardTitle>
+            <p className="text-sm text-muted-foreground font-normal">
+              Logo, favicon, dan judul untuk tampilan publik (bukan panel admin).
+              Dipakai oleh frontend publik lewat API settings atau event{" "}
+              <code className="text-xs">publicAppMetadataUpdated</code>.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {getSettingsByCategory("public").length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Belum ada baris kategori <strong>public</strong> di database.
+                Jalankan migrasi <code className="text-xs">0004</code> atau{" "}
+                <code className="text-xs">pnpm seed</code>.
+              </p>
+            ) : (
+              getSettingsByCategory("public").map((setting) => (
+                <div key={setting.id}>{renderSetting(setting)}</div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
         {/* Live Preview */}
         <Card>
           <CardHeader>
@@ -466,6 +512,9 @@ export default function SettingsPage() {
                   window.dispatchEvent(new CustomEvent("logoUpdated"));
                   window.dispatchEvent(new CustomEvent("sidebarRefresh"));
                   window.dispatchEvent(new CustomEvent("metadataUpdated"));
+                  window.dispatchEvent(
+                    new CustomEvent("publicAppMetadataUpdated"),
+                  );
                   toast({
                     title: "Preview Diperbarui",
                     description:

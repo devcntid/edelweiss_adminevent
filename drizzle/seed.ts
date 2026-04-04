@@ -138,6 +138,27 @@ async function seedCore(client: pg.Client) {
       category: "general",
       description: "Application description",
     },
+    {
+      key: SETTING_KEYS.LOGO_PUBLIC_APP,
+      value: DEFAULT_SETTINGS[SETTING_KEYS.LOGO_PUBLIC_APP] ?? "",
+      type: "file",
+      category: "public",
+      description: "Logo aplikasi publik (situs / app pengunjung)",
+    },
+    {
+      key: SETTING_KEYS.FAVICON_PUBLIC_APP,
+      value: DEFAULT_SETTINGS[SETTING_KEYS.FAVICON_PUBLIC_APP] ?? "",
+      type: "file",
+      category: "public",
+      description: "Favicon aplikasi publik",
+    },
+    {
+      key: SETTING_KEYS.TITLE_PUBLIC_APP,
+      value: DEFAULT_SETTINGS[SETTING_KEYS.TITLE_PUBLIC_APP] ?? "",
+      type: "string",
+      category: "public",
+      description: "Judul (title) aplikasi publik — tab browser & metadata",
+    },
   ];
 
   for (const s of settingsRows) {

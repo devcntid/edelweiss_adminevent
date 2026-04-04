@@ -11,7 +11,11 @@ export interface Setting {
 
 export type SettingType = 'string' | 'color' | 'file' | 'boolean' | 'number';
 
-export type SettingCategory = 'branding' | 'appearance' | 'general';
+export type SettingCategory =
+  | 'branding'
+  | 'appearance'
+  | 'general'
+  | 'public';
 
 export interface SettingInput {
   key: string;
@@ -73,6 +77,11 @@ export const SETTING_KEYS = {
   // General
   APP_NAME: 'app_name',
   APP_DESCRIPTION: 'app_description',
+
+  /** Metadata untuk aplikasi / situs publik (bukan panel admin) */
+  LOGO_PUBLIC_APP: 'logo_public_app',
+  FAVICON_PUBLIC_APP: 'favicon_public_app',
+  TITLE_PUBLIC_APP: 'title_public_app',
 } as const;
 
 // Default values
@@ -86,4 +95,7 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
   // Dibiarkan generic; nilai sebenarnya diambil dari database (tabel settings)
   [SETTING_KEYS.APP_NAME]: '',
   [SETTING_KEYS.APP_DESCRIPTION]: '',
+  [SETTING_KEYS.LOGO_PUBLIC_APP]: '/logo-main-new.png',
+  [SETTING_KEYS.FAVICON_PUBLIC_APP]: '/favicon.png',
+  [SETTING_KEYS.TITLE_PUBLIC_APP]: '',
 };

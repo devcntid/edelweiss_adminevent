@@ -79,6 +79,18 @@ export function useSettings() {
     return getSettingsByCategory("general");
   }, [getSettingsByCategory]);
 
+  const getPublicSettings = useCallback(() => {
+    return getSettingsByCategory("public");
+  }, [getSettingsByCategory]);
+
+  const getPublicAppMetadata = useCallback(() => {
+    return {
+      logo: getSettingValue(SETTING_KEYS.LOGO_PUBLIC_APP),
+      favicon: getSettingValue(SETTING_KEYS.FAVICON_PUBLIC_APP),
+      title: getSettingValue(SETTING_KEYS.TITLE_PUBLIC_APP),
+    };
+  }, [getSettingValue]);
+
   const getDynamicSettings = useCallback(() => {
     return {
       logo: getSettingValue(SETTING_KEYS.APP_LOGO),
@@ -105,6 +117,8 @@ export function useSettings() {
     getBrandingSettings,
     getAppearanceSettings,
     getGeneralSettings,
+    getPublicSettings,
+    getPublicAppMetadata,
     getDynamicSettings,
   };
 }

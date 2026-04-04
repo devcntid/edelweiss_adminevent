@@ -977,6 +977,10 @@ export class SettingsService {
   static async getGeneralSettings() {
     return this.getByCategory("general");
   }
+
+  static async getPublicSettings() {
+    return this.getByCategory("public");
+  }
 }
 
 // --- Metadata Generation ---
