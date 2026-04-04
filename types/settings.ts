@@ -40,6 +40,7 @@ export type LoginBranding = {
   logo: string;
   loginBackground: string;
   appName: string;
+  favicon: string;
 };
 
 export interface SettingsResponse {

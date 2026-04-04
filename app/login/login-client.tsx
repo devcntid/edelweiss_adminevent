@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
+import { applyFaviconToDocument } from "@/lib/apply-favicon";
 import {
   DEFAULT_SETTINGS,
   FALLBACK_APP_TITLE,
@@ -28,6 +29,7 @@ export default function LoginClient({ initialBranding }: Props) {
     initialBranding.loginBackground,
   );
   const [appName, setAppName] = useState(initialBranding.appName);
+  const [favicon, setFavicon] = useState(initialBranding.favicon);
 
   const applyBrandingPayload = useCallback((data: unknown) => {
     if (!Array.isArray(data)) return;
@@ -40,6 +42,9 @@ export default function LoginClient({ initialBranding }: Props) {
     const nameSetting = data.find(
       (s: { key: string }) => s.key === SETTING_KEYS.APP_NAME,
     );
+    const faviconSetting = data.find(
+      (s: { key: string }) => s.key === SETTING_KEYS.APP_FAVICON,
+    );
     if (logoSetting?.value?.trim())
       setLogo(logoSetting.value.trim());
     else setLogo(DEFAULT_SETTINGS[SETTING_KEYS.APP_LOGO]);
@@ -51,6 +56,9 @@ export default function LoginClient({ initialBranding }: Props) {
       );
     const name = nameSetting?.value?.trim();
     setAppName(name || FALLBACK_APP_TITLE);
+    if (faviconSetting?.value?.trim())
+      setFavicon(faviconSetting.value.trim());
+    else setFavicon(DEFAULT_SETTINGS[SETTING_KEYS.APP_FAVICON]);
   }, []);
 
   const fetchBranding = useCallback(async () => {
@@ -98,6 +106,10 @@ export default function LoginClient({ initialBranding }: Props) {
     if (typeof document === "undefined") return;
     document.title = appName || FALLBACK_APP_TITLE;
   }, [appName]);
+
+  useEffect(() => {
+    applyFaviconToDocument(favicon);
+  }, [favicon]);
 
   useEffect(() => {
     const error = searchParams.get("error");

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { applyFaviconToDocument } from "@/lib/apply-favicon";
 import {
   DEFAULT_SETTINGS,
   FALLBACK_APP_TITLE,
@@ -30,28 +31,7 @@ const forceDOMUpdate = (metadata: MetadataSettings) => {
   // Update document title immediately
   document.title = metadata.appName?.trim() || FALLBACK_APP_TITLE;
 
-  // Remove all existing favicons first, with a safety check
-  const existingFavicons = document.querySelectorAll("link[rel*='icon']");
-  existingFavicons.forEach((favicon) => {
-    if (favicon.parentNode) {
-      favicon.parentNode.removeChild(favicon);
-    }
-  });
-
-  const cacheBustedFaviconUrl = metadata.favicon + "?v=" + Date.now();
-
-  // Create new favicon
-  const newFavicon = document.createElement("link");
-  newFavicon.rel = "icon";
-  newFavicon.type = "image/png";
-  newFavicon.href = cacheBustedFaviconUrl; // Cache bust
-  document.head.appendChild(newFavicon);
-
-  // Also create shortcut icon for better browser support
-  const shortcutIcon = document.createElement("link");
-  shortcutIcon.rel = "shortcut icon";
-  shortcutIcon.href = cacheBustedFaviconUrl;
-  document.head.appendChild(shortcutIcon);
+  applyFaviconToDocument(metadata.favicon);
 
   // Update meta description
   let metaDescription = document.querySelector('meta[name="description"]');
