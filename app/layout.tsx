@@ -5,17 +5,16 @@ import "./globals.css";
 import MainLayoutClient from "@/components/main-layout-client";
 import SessionProviderWrapper from "@/components/session-provider";
 import DynamicMetadata from "@/components/dynamic-metadata";
+import { generateDynamicMetadata } from "@/lib/database";
 
 const sourceSansPro = Source_Sans_3({
   subsets: ["latin"],
   variable: "--font-source-sans-pro",
 });
 
-export const metadata: Metadata = {
-  title: "Admin Kreativa Event",
-  description: "Admin dashboard untuk manajemen event dan tiket",
-  generator: "v0.app",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return generateDynamicMetadata();
+}
 
 export const revalidate = 0;
 

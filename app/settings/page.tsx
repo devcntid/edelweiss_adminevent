@@ -81,10 +81,13 @@ export default function SettingsPage() {
         );
 
         // Also dispatch specific events for different components
-        if (key === "app_logo") {
+        if (key === SETTING_KEYS.APP_LOGO) {
           window.dispatchEvent(new CustomEvent("logoUpdated"));
         }
-        if (key === "app_name" || key === "app_description") {
+        if (
+          key === SETTING_KEYS.APP_NAME ||
+          key === SETTING_KEYS.APP_DESCRIPTION
+        ) {
           window.dispatchEvent(new CustomEvent("metadataUpdated"));
         }
         if (key.includes("sidebar_")) {
@@ -136,7 +139,10 @@ export default function SettingsPage() {
         window.dispatchEvent(new CustomEvent("sidebarRefresh"));
 
         // Force a page metadata refresh if it's favicon
-        if (settingKey === "app_favicon") {
+        if (
+          settingKey === SETTING_KEYS.APP_FAVICON ||
+          settingKey === SETTING_KEYS.APP_LOGIN_BACKGROUND
+        ) {
           window.dispatchEvent(new CustomEvent("metadataUpdated"));
         }
 
@@ -187,12 +193,24 @@ export default function SettingsPage() {
       </div>
       {setting.value && (
         <div className="mt-2">
-          <Label>Current Logo:</Label>
+          <Label>
+            {setting.key === SETTING_KEYS.APP_LOGO
+              ? "Pratinjau logo:"
+              : setting.key === SETTING_KEYS.APP_FAVICON
+                ? "Pratinjau favicon:"
+                : setting.key === SETTING_KEYS.APP_LOGIN_BACKGROUND
+                  ? "Pratinjau background halaman login:"
+                  : "Pratinjau:"}
+          </Label>
           <div className="mt-2 p-4 border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center bg-gray-50">
             <img
               src={setting.value}
               alt={setting.description || setting.key}
-              className="max-w-full max-h-24 w-auto h-auto object-contain"
+              className={
+                setting.key === SETTING_KEYS.APP_LOGIN_BACKGROUND
+                  ? "max-w-full max-h-40 w-auto h-auto object-cover rounded-md"
+                  : "max-w-full max-h-24 w-auto h-auto object-contain"
+              }
               onError={(e) => {
                 e.currentTarget.src = "/logo-main-new.png";
               }}

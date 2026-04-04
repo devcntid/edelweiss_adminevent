@@ -104,6 +104,13 @@ async function seedCore(client: pg.Client) {
       description: "Application favicon",
     },
     {
+      key: SETTING_KEYS.APP_LOGIN_BACKGROUND,
+      value: DEFAULT_SETTINGS[SETTING_KEYS.APP_LOGIN_BACKGROUND] ?? "",
+      type: "file",
+      category: "branding",
+      description: "Login page background image",
+    },
+    {
       key: SETTING_KEYS.SIDEBAR_PRIMARY_COLOR,
       value: DEFAULT_SETTINGS[SETTING_KEYS.SIDEBAR_PRIMARY_COLOR] ?? "#9333ea",
       type: "color",

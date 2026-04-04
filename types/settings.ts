@@ -35,6 +35,13 @@ export interface DynamicSettings {
   appDescription: string;
 }
 
+/** Branding khusus halaman login (server + client) */
+export type LoginBranding = {
+  logo: string;
+  loginBackground: string;
+  appName: string;
+};
+
 export interface SettingsResponse {
   success: boolean;
   data?: Setting | Setting[];
@@ -48,11 +55,15 @@ export interface UploadResponse {
   size: number;
 }
 
+/** Judul aplikasi (tab browser, dsb.) jika `app_name` di database kosong */
+export const FALLBACK_APP_TITLE = 'Admin Panel';
+
 // Predefined setting keys
 export const SETTING_KEYS = {
   // Branding
   APP_LOGO: 'app_logo',
   APP_FAVICON: 'app_favicon',
+  APP_LOGIN_BACKGROUND: 'app_login_background',
 
   // Appearance
   SIDEBAR_PRIMARY_COLOR: 'sidebar_primary_color',
@@ -67,6 +78,8 @@ export const SETTING_KEYS = {
 export const DEFAULT_SETTINGS: Record<string, string> = {
   [SETTING_KEYS.APP_LOGO]: '/logo-main-new.png',
   [SETTING_KEYS.APP_FAVICON]: '/favicon.png',
+  [SETTING_KEYS.APP_LOGIN_BACKGROUND]:
+    'https://tguray8zidjbrs4r.public.blob.vercel-storage.com/logo/bg.png',
   [SETTING_KEYS.SIDEBAR_PRIMARY_COLOR]: '#9333ea',
   [SETTING_KEYS.SIDEBAR_SECONDARY_COLOR]: '#7c3aed',
   // Dibiarkan generic; nilai sebenarnya diambil dari database (tabel settings)

@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DEFAULT_SETTINGS, SETTING_KEYS } from "@/types/settings";
+import {
+  DEFAULT_SETTINGS,
+  FALLBACK_APP_TITLE,
+  SETTING_KEYS,
+} from "@/types/settings";
 
 interface MetadataSettings {
   appName: string;
@@ -11,7 +15,8 @@ interface MetadataSettings {
 
 // Global metadata state to ensure consistency
 let globalMetadata: MetadataSettings = {
-  appName: DEFAULT_SETTINGS[SETTING_KEYS.APP_NAME],
+  appName:
+    DEFAULT_SETTINGS[SETTING_KEYS.APP_NAME]?.trim() || FALLBACK_APP_TITLE,
   appDescription: DEFAULT_SETTINGS[SETTING_KEYS.APP_DESCRIPTION],
   favicon: DEFAULT_SETTINGS[SETTING_KEYS.APP_FAVICON],
 };
@@ -23,7 +28,7 @@ const forceDOMUpdate = (metadata: MetadataSettings) => {
   console.log("🔄 Force updating DOM metadata:", metadata);
 
   // Update document title immediately
-  document.title = metadata.appName;
+  document.title = metadata.appName?.trim() || FALLBACK_APP_TITLE;
 
   // Remove all existing favicons first, with a safety check
   const existingFavicons = document.querySelectorAll("link[rel*='icon']");
@@ -99,7 +104,9 @@ export function useDynamicMetadata() {
 
         const newMetadata = {
           appName:
-            nameSetting?.value || DEFAULT_SETTINGS[SETTING_KEYS.APP_NAME],
+            nameSetting?.value?.trim() ||
+            DEFAULT_SETTINGS[SETTING_KEYS.APP_NAME]?.trim() ||
+            FALLBACK_APP_TITLE,
           appDescription:
             descriptionSetting?.value ||
             DEFAULT_SETTINGS[SETTING_KEYS.APP_DESCRIPTION],

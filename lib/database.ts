@@ -635,43 +635,29 @@ export class DatabaseUtils {
       console.log("Building parameterized query with conditions");
       const values = conditionEntries.map(([, value]) => value);
 
+      const sqlEscape = (v: unknown) => {
+        if (v === null || v === undefined) return "NULL";
+        if (typeof v === "string")
+          return `'${String(v).replace(/'/g, "''")}'`;
+        if (typeof v === "boolean") return v ? "TRUE" : "FALSE";
+        return String(v);
+      };
+      const safeValues = values.map((v) => sqlEscape(v));
+      const safeWhereClause = conditionEntries
+        .map(([col], i) => `${col} = ${safeValues[i]}`)
+        .join(" AND ");
+
       if (orderBy) {
-        // With conditions and ordering
-        const whereClause = conditionEntries
-          .map(([key], i) => `${key} = $${i + 1}`)
-          .join(" AND ");
         console.log(`Executing parameterized query with ORDER BY`);
-        const safeValues = values.map((v) =>
-          typeof v === "string" ? `'${v}'` : v,
-        );
-        const safeWhereClause = conditionEntries
-          .map(([key], i) => `${key} = ${safeValues[i]}`)
-          .join(" AND ");
-        const query = `SELECT * FROM ${table} WHERE ${safeWhereClause} ORDER BY ${orderBy.column} ${orderBy.direction}`;
-        const result = (await sql.unsafe(query)) as unknown as T[];
-        console.log(
-          `Query result count: ${Array.isArray(result) ? result.length : 0}`,
-        );
-        return result;
-      } else {
-        // With conditions but no ordering
-        const whereClause = conditionEntries
-          .map(([key], i) => `${key} = $${i + 1}`)
-          .join(" AND ");
-        console.log(`Executing parameterized query without ORDER BY`);
-        const safeValues = values.map((v) =>
-          typeof v === "string" ? `'${v}'` : v,
-        );
-        const safeWhereClause = conditionEntries
-          .map(([key], i) => `${key} = ${safeValues[i]}`)
-          .join(" AND ");
-        const query = `SELECT * FROM ${table} WHERE ${safeWhereClause}`;
-        const result = (await sql.unsafe(query)) as unknown as T[];
-        console.log(
-          `Query result count: ${Array.isArray(result) ? result.length : 0}`,
-        );
-        return result;
+        const result = await sql`SELECT * FROM ${sql.unsafe(table)} WHERE ${sql.unsafe(safeWhereClause)} ORDER BY ${sql.unsafe(orderBy.column)} ${sql.unsafe(orderBy.direction)}`;
+        console.log(`Query result count: ${result.length}`);
+        return result as T[];
       }
+
+      console.log(`Executing parameterized query without ORDER BY`);
+      const result = await sql`SELECT * FROM ${sql.unsafe(table)} WHERE ${sql.unsafe(safeWhereClause)}`;
+      console.log(`Query result count: ${result.length}`);
+      return result as T[];
     } catch (error) {
       console.error(`Error finding ${table}:`, error);
       if (error instanceof Error) {
@@ -695,18 +681,18 @@ export class DatabaseUtils {
       const values = Object.values(data);
       const placeholders = columns.map((_, i) => `$${i + 1}`).join(", ");
 
-      const query = `
-        INSERT INTO ${sql.unsafe(table)} (${sql.unsafe(columns.join(", "))})
-        VALUES (${placeholders})
-        RETURNING *
-      `;
-      const safeValues = values.map((v) =>
-        typeof v === "string" ? `'${v}'` : v,
-      );
-      const finalQuery = query.replace(/\$(\d+)/g, (match, index) => {
-        return safeValues[Number.parseInt(index) - 1];
+      const query = `INSERT INTO ${table} (${columns.join(", ")}) VALUES (${placeholders}) RETURNING *`;
+      const safeValues = values.map((v) => {
+        if (v === null || v === undefined) return "NULL";
+        if (typeof v === "string")
+          return `'${String(v).replace(/'/g, "''")}'`;
+        if (typeof v === "boolean") return v ? "TRUE" : "FALSE";
+        return String(v);
       });
-      const result = (await sql.unsafe(finalQuery)) as unknown as T[];
+      const finalQuery = query.replace(/\$(\d+)/g, (_match, index) => {
+        return safeValues[Number.parseInt(index, 10) - 1];
+      });
+      const result = await sql`${sql.unsafe(finalQuery)}`;
       return ((Array.isArray(result) ? result[0] : null) as T) || null;
     } catch (error) {
       console.error(`Error creating ${table}:`, error);
@@ -722,24 +708,26 @@ export class DatabaseUtils {
     const sql = getDatabase();
     try {
       const columns = Object.keys(data);
-      const setClauses = columns.map(
-        (col, i) => `${sql.unsafe(col)} = $${i + 1}`,
-      );
+      const setClauses = columns.map((col, i) => `${col} = $${i + 1}`);
       const values = Object.values(data);
 
       const query = `
-        UPDATE ${sql.unsafe(table)}
+        UPDATE ${table}
         SET ${setClauses.join(", ")}, updated_at = NOW()
         WHERE id = $${columns.length + 1}
         RETURNING *
       `;
-      const allValues = [...values, id].map((v) =>
-        typeof v === "string" ? `'${v}'` : v,
-      );
-      const finalQuery = query.replace(/\$(\d+)/g, (match, index) => {
-        return allValues[Number.parseInt(index) - 1];
+      const allValues = [...values, id].map((v) => {
+        if (v === null || v === undefined) return "NULL";
+        if (typeof v === "string")
+          return `'${String(v).replace(/'/g, "''")}'`;
+        if (typeof v === "boolean") return v ? "TRUE" : "FALSE";
+        return String(v);
       });
-      const result = (await sql.unsafe(finalQuery)) as unknown as T[];
+      const finalQuery = query.replace(/\$(\d+)/g, (_match, index) => {
+        return allValues[Number.parseInt(index, 10) - 1];
+      });
+      const result = await sql`${sql.unsafe(finalQuery)}`;
       return ((Array.isArray(result) ? result[0] : null) as T) || null;
     } catch (error) {
       console.error(`Error updating ${table}:`, error);
@@ -765,22 +753,25 @@ export class DatabaseUtils {
     const sql = getDatabase();
     try {
       const conditionEntries = Object.entries(conditions);
-      let query = `SELECT COUNT(*) as count FROM ${sql.unsafe(table)}`;
+      const sqlEscape = (v: unknown) => {
+        if (v === null || v === undefined) return "NULL";
+        if (typeof v === "string")
+          return `'${String(v).replace(/'/g, "''")}'`;
+        if (typeof v === "boolean") return v ? "TRUE" : "FALSE";
+        return String(v);
+      };
 
       if (conditionEntries.length > 0) {
-        const safeValues = conditionEntries.map(([, value]) =>
-          typeof value === "string" ? `'${value}'` : value,
-        );
-        const whereClauses = conditionEntries.map(
-          ([key], i) => `${sql.unsafe(key)} = ${safeValues[i]}`,
-        );
-        query += ` WHERE ${whereClauses.join(" AND ")}`;
+        const vals = conditionEntries.map(([, value]) => sqlEscape(value));
+        const safeWhereClause = conditionEntries
+          .map(([col], i) => `${col} = ${vals[i]}`)
+          .join(" AND ");
+        const result = await sql`SELECT COUNT(*) as count FROM ${sql.unsafe(table)} WHERE ${sql.unsafe(safeWhereClause)}`;
+        return Number((result as { count: string | number }[])[0]?.count) || 0;
       }
 
-      const result = (await sql.unsafe(query)) as unknown as Array<{
-        count: string | number;
-      }>;
-      return Number(result[0]?.count) || 0;
+      const result = await sql`SELECT COUNT(*) as count FROM ${sql.unsafe(table)}`;
+      return Number((result as { count: string | number }[])[0]?.count) || 0;
     } catch (error) {
       console.error(`Error counting ${table}:`, error);
       return 0;
@@ -991,7 +982,11 @@ export class SettingsService {
 // --- Metadata Generation ---
 
 // Define a type for the settings we expect to find
-import { DEFAULT_SETTINGS, SETTING_KEYS } from "@/types/settings";
+import {
+  DEFAULT_SETTINGS,
+  FALLBACK_APP_TITLE,
+  SETTING_KEYS,
+} from "@/types/settings";
 
 interface BrandingSettings {
   appName: string;
@@ -1001,7 +996,7 @@ interface BrandingSettings {
 
 // Default metadata hanya digunakan jika tabel settings kosong / error
 const defaultMetadata: BrandingSettings = {
-  appName: DEFAULT_SETTINGS[SETTING_KEYS.APP_NAME] || "Admin Panel",
+  appName: FALLBACK_APP_TITLE,
   appDescription: DEFAULT_SETTINGS[SETTING_KEYS.APP_DESCRIPTION] || "",
   favicon: DEFAULT_SETTINGS[SETTING_KEYS.APP_FAVICON] || "/favicon.png",
 };
@@ -1029,8 +1024,9 @@ export async function getBrandingSettings(): Promise<BrandingSettings> {
     );
     const faviconSetting = allSettings.find((s) => s.key === "app_favicon");
 
+    const name = appNameSetting?.value?.trim();
     return {
-      appName: appNameSetting?.value || defaultMetadata.appName,
+      appName: name || defaultMetadata.appName,
       appDescription:
         appDescriptionSetting?.value || defaultMetadata.appDescription,
       favicon: faviconSetting?.value || defaultMetadata.favicon,
@@ -1050,8 +1046,10 @@ export async function getBrandingSettings(): Promise<BrandingSettings> {
 export async function generateDynamicMetadata(): Promise<Metadata> {
   const settings = await getBrandingSettings();
 
+  const title = settings.appName?.trim() || FALLBACK_APP_TITLE;
+
   return {
-    title: settings.appName,
+    title,
     description: settings.appDescription,
     generator: "v0.app",
     icons: {
