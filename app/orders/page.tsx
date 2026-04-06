@@ -48,7 +48,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Trash2, MessageSquare } from "lucide-react";
+import { Trash2, MessageSquare, ImageIcon } from "lucide-react";
 import * as XLSX from "xlsx";
 
 type Order = {
@@ -150,6 +150,16 @@ export default function OrdersPage() {
     open: false,
     orderId: null,
     orderReference: null,
+  });
+
+  const [proofDialog, setProofDialog] = useState<{
+    open: boolean;
+    imageUrl: string | null;
+    orderId: number | null;
+  }>({
+    open: false,
+    imageUrl: null,
+    orderId: null,
   });
 
   // Upload states
@@ -1227,6 +1237,22 @@ export default function OrdersPage() {
                             <SelectItem value="failed">Failed</SelectItem>
                           </SelectContent>
                         </Select>
+                        {order.proof_transfer?.trim() && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              setProofDialog({
+                                open: true,
+                                imageUrl: order.proof_transfer?.trim() ?? "",
+                                orderId: order.id,
+                              })
+                            }
+                            title="Lihat bukti transfer"
+                          >
+                            <ImageIcon className="h-4 w-4" />
+                          </Button>
+                        )}
                         {order.status === "paid" && (
                           <Button
                             variant="outline"
@@ -1348,6 +1374,43 @@ export default function OrdersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Bukti transfer */}
+      <Dialog
+        open={proofDialog.open}
+        onOpenChange={(open) => {
+          if (!open) {
+            setProofDialog({
+              open: false,
+              imageUrl: null,
+              orderId: null,
+            });
+          }
+        }}
+      >
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Bukti transfer
+              {proofDialog.orderId != null
+                ? ` — Order #${proofDialog.orderId}`
+                : ""}
+            </DialogTitle>
+            <DialogDescription>
+              Gambar bukti pembayaran yang diunggah untuk order ini.
+            </DialogDescription>
+          </DialogHeader>
+          {proofDialog.imageUrl && (
+            <div className="flex justify-center rounded-md border bg-muted/30 p-2">
+              <img
+                src={proofDialog.imageUrl}
+                alt="Bukti transfer"
+                className="max-h-[70vh] w-full max-w-full object-contain"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialog.open} onOpenChange={(open) => {
